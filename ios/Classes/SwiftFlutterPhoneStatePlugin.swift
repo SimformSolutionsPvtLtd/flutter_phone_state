@@ -63,11 +63,26 @@ public class SwiftFlutterPhoneStatePlugin: NSObject, CXCallObserverDelegate, Flu
     public override init() {
         callObserver = CXCallObserver()
         super.init()
-        callObserver.setDelegate(self, queue: DispatchQueue.main)
+        if isCallKitSupported() {
+            callObserver.setDelegate(self, queue: DispatchQueue.main)
+        }
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         result("iOS " + UIDevice.current.systemVersion)
+    }
+    
+    func isCallKitSupported() -> Bool {
+        let userLocale = NSLocale.current
+        
+        guard let regionCode = userLocale.regionCode else { return false }
+        
+        if regionCode.contains("CN") ||
+            regionCode.contains("CHN") {
+            return false
+        } else {
+            return true
+        }
     }
 }
 
