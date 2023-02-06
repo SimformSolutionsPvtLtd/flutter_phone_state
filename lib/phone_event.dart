@@ -1,10 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_phone_state/extensions_static.dart';
-import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
-
-final Logger _log = Logger("flutterPhoneState");
 
 /// Represents phone events that surface from the device.  These events can be subscribed to by
 /// using [FlutterPhoneState.rawEventStream]
@@ -156,7 +154,7 @@ class PhoneCall {
   FutureOr<PhoneCall> get done {
     if (_isComplete) return this;
     return _getOrCreateEventController().done.then((_) {
-      _log.info("Finished call.  Status $status");
+      debugPrint("Finished call.  Status $status");
       return this;
     });
   }

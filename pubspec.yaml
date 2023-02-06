@@ -10,10 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  url_launcher: ^6.0.2
-  logging: ^1.0.1
+  url_launcher:
   uuid: ^3.0.3
-  stream_transform: ^2.0.0
 
 
 dev_dependencies:

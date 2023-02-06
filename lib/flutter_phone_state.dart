@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_phone_state/extensions_static.dart';
-import 'package:flutter_phone_state/logging.dart';
 import 'package:flutter_phone_state/phone_event.dart';
-import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 export 'package:flutter_phone_state/phone_event.dart';
@@ -14,15 +12,9 @@ export 'package:flutter_phone_state/phone_event.dart';
 final _localEvents = StreamController<PhoneCallEvent>.broadcast();
 const MethodChannel _channel = MethodChannel('flutter_phone_state');
 
-final Logger _log = Logger("flutterPhoneState");
 final _instance = FlutterPhoneState();
 
 class FlutterPhoneState with WidgetsBindingObserver {
-  /// Configures logging.  FlutterPhoneState uses the [logging] plugin.
-  static void configureLogs({Level? level, Logging? onLog}) {
-    configureLogging(logger: _log, level: level, onLog: onLog);
-  }
-
   static Future<String?> get platformVersion async {
     final String? version =
         await _channel.invokeMethod<String?>('getPlatformVersion');
@@ -47,7 +39,6 @@ class FlutterPhoneState with WidgetsBindingObserver {
   static Iterable<PhoneCall> get activeCalls => [..._instance._calls];
 
   FlutterPhoneState() {
-    configureLogging(logger: _log);
     WidgetsBinding.instance?.addObserver(this);
     _initializedNativeEvents?.forEach(_handleRawPhoneEvent);
   }
@@ -75,7 +66,7 @@ class FlutterPhoneState with WidgetsBindingObserver {
   }
 
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _log.info("Received application lifecycle state change: $state");
+    debugPrint('Received application lifecycle state change: $state');
 
     if (state == AppLifecycleState.resumed) {
       /// We wait 1 second because ios has a short flash of resumed before the phone app opens
@@ -133,13 +124,13 @@ class FlutterPhoneState with WidgetsBindingObserver {
     // create an event
     PhoneCallEvent event;
     if (call.events.any((e) => e.status == status)) {
-      _log.fine("Call ${truncate(call.id, 8)} already has status $status");
+      debugPrint("Call ${truncate(call.id, 8)} already has status $status");
     }
     if (status == PhoneCallStatus.disconnected ||
         status == PhoneCallStatus.timedOut ||
         status == PhoneCallStatus.error ||
         status == PhoneCallStatus.cancelled) {
-      _log.info("Call is done: ${call.id}- Removing due to $status");
+      debugPrint("Call is done: ${call.id}- Removing due to $status");
       call.complete(status).then((event) {
         _localEvents.add(event);
       });
@@ -158,7 +149,7 @@ class FlutterPhoneState with WidgetsBindingObserver {
 
       /// If no match was found?
       if (matching == null && event.isNewCall) {
-        _log.info("Adding a call to the stack: $event");
+        debugPrint("Adding a call to the stack: $event");
         matching = PhoneCall.start(
           event.phoneNumber,
           event.type == RawEventType.inbound
@@ -196,7 +187,8 @@ class FlutterPhoneState with WidgetsBindingObserver {
           break;
       }
     } catch (e, stack) {
-      _log.severe("Error handling phone call event: $e", e, stack);
+      debugPrint("Error handling phone call event: $e");
+      debugPrintStack(stackTrace: stack);
     }
   }
 
@@ -224,7 +216,7 @@ Stream<RawPhoneEvent?>? get _initializedNativeEvents {
     try {
       if (dyn == null) return null;
       if (dyn is! Map) {
-        _log.warning("Unexpected result type for phone event.  "
+        debugPrint("Unexpected result type for phone event.  "
             "Expected Map<String, dynamic> but got ${dyn?.runtimeType ?? 'null'} ");
       }
       final Map<String, dynamic> event = (dyn as Map).cast();
@@ -232,7 +224,8 @@ Stream<RawPhoneEvent?>? get _initializedNativeEvents {
       return RawPhoneEvent(
           event["id"] as String, event["phoneNumber"] as String, eventType);
     } catch (e, stack) {
-      _log.severe("Error handling native event $e", e, stack);
+      debugPrint("Error handling native event $e");
+      debugPrintStack(stackTrace: stack);
       return null;
     }
   });
