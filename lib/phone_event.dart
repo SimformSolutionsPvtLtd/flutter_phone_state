@@ -1,10 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_phone_state/extensions_static.dart';
-import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
-
-final Logger _log = Logger("flutterPhoneState");
 
 /// Represents phone events that surface from the device.  These events can be subscribed to by
 /// using [FlutterPhoneState.rawEventStream]
@@ -15,10 +13,10 @@ class RawPhoneEvent {
   /// android: always null
   /// ios: a uuid
   /// others: ??
-  final String id;
+  final String? id;
 
   /// If available, the phone number being dialed.
-  final String phoneNumber;
+  final String? phoneNumber;
 
   /// The type of call event.
   final RawEventType type;
@@ -51,17 +49,17 @@ class RawPhoneEvent {
 class PhoneCallEvent {
   /// The call this event was attached to.
   /// @non_null
-  final PhoneCall call;
+  final PhoneCall? call;
 
   /// What status this event represents.
   /// @non_null
-  final PhoneCallStatus status;
+  final PhoneCallStatus? status;
 
   /// Timestamp for this event
   /// @non_null
   final DateTime timestamp;
 
-  PhoneCallEvent(this.call, this.status, [DateTime eventDate])
+  PhoneCallEvent(this.call, this.status, [DateTime? eventDate])
       : timestamp = eventDate ?? DateTime.now();
 
   @override
@@ -82,15 +80,15 @@ class PhoneCall {
 
   /// An id assigned to the call by the underlying os
   /// @nullable
-  String callId;
+  String? callId;
 
   /// The phone number being dialed, or the inbound number
   /// @nullabe
-  String phoneNumber;
+  String? phoneNumber;
 
   /// The current status of the call
   /// @non_null
-  PhoneCallStatus status;
+  PhoneCallStatus? status;
 
   /// Whether the call is inbound or outbound
   /// @non_null
@@ -106,12 +104,12 @@ class PhoneCall {
   bool _isComplete = false;
 
   /// Used internally to track the call events, can be subscribed to, or awaited on.
-  StreamController<PhoneCallEvent> _eventStream;
+  StreamController<PhoneCallEvent>? _eventStream;
 
   /// The final call duration.  See [duration]
-  Duration _duration;
+  Duration? _duration;
 
-  PhoneCall.start(this.phoneNumber, this.placement, [String id])
+  PhoneCall.start(this.phoneNumber, this.placement, [String? id])
       : status = null,
         id = id ?? Uuid().v4(),
         events = <PhoneCallEvent>[],
@@ -134,7 +132,7 @@ class PhoneCall {
     final event = recordStatus(status);
     _isComplete = true;
     if (_eventStream?.isClosed == false) {
-      await _eventStream.close();
+      await _eventStream?.close();
       return event;
     } else {
       return event;
@@ -156,7 +154,7 @@ class PhoneCall {
   FutureOr<PhoneCall> get done {
     if (_isComplete) return this;
     return _getOrCreateEventController().done.then((_) {
-      _log.info("Finished call.  Status $status");
+      debugPrint("Finished call.  Status $status");
       return this;
     });
   }
@@ -182,8 +180,7 @@ class PhoneCall {
         this.phoneNumber != null &&
         event.phoneNumber != this.phoneNumber) return false;
     if (this.callId != null && this.callId != event.id) return false;
-    if (isNotBefore(status, event.type)) return false;
-
+    if (status == null || isNotBefore(status!, event.type)) return false;
     return true;
   }
 

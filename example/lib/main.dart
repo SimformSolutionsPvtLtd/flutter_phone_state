@@ -5,6 +5,7 @@ import 'package:flutter_phone_state/extensions_static.dart';
 import 'package:flutter_phone_state/flutter_phone_state.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
