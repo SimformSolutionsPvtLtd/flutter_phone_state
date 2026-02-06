@@ -4,7 +4,9 @@ version: 2.0.0
 homepage: "https://github.com/SunnyApp/flutter_phone_state.git"
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.10.8 <4.0.0'
+  flutter: '>=3.38.9 <4.0.0'
+resolution: workspace
 
 dependencies:
   flutter:
